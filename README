@@ -12,5 +12,9 @@ These types are :
 The goal of this design is to keep the codebase as small 
 as possible. Hence, as maintainable as possible.
 
-Additional features features must be done by the 
-developer using mui.
+Additional features must be done by the developer using 
+mui.
+
+Right now the only fully working platform is OpenBSD.
+Further efforts will be done to include FreeBSD as well
+as NetBSD.

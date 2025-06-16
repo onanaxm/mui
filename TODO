@@ -2,6 +2,8 @@
 -- mui
 -------------------
 
+ - Define `mui_image` struct
+
  - Add text wrapping
 
  - Create `demo` directory
@@ -9,6 +11,8 @@
  - Implement `TEXT_MAX_SIZE` in `add_text` in file `text.c`
 
  - Complete mui.3 man page
+
+ - Cleanup functions
 
 
 -------------------

@@ -27,6 +27,8 @@ mui: ${OBJS}
 	${CC} -shared -Wl,-soname,libmui.so -o libmui.so ${OBJS} ${LIBS}
 
 clean:
+	make clean -C demo/hello_win
+	make clean -C demo/multiline
 	rm -f libmui.so ${OBJS}
 
 .PHONY: all mui

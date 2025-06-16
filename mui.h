@@ -79,14 +79,14 @@ struct mui_text {
     TAILQ_HEAD(tts_head, tstream) ts_head;
 };
 
+struct mui_shape { };
+
+struct mui_image { };
+
 
 /*
  * Used for region highlight and shape rendering
  */
-struct mui_rectangle { };
-
-
-struct mui_button { };
 
 #define MUI_WIN_EV_SIZE     32
 
