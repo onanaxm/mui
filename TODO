@@ -1,0 +1,20 @@
+-------------------
+-- mui
+-------------------
+
+ - Add text wrapping
+
+ - Create `demo` directory
+
+ - Implement `TEXT_MAX_SIZE` in `add_text` in file `text.c`
+
+ - Complete mui.3 man page
+
+
+-------------------
+-- Makefile
+-------------------
+ 
+ - Library install rule
+
+ - Font installation rule

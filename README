@@ -1,0 +1,16 @@
+mui
+-----------------------------------------------------------
+
+mui is a UI library that is designed following the principe
+that only 3 type of element can be rendered on a window.
+These types are :
+
+   1. Text
+   2. Shapes
+   3. Images
+
+The goal of this design is to keep the codebase as small 
+as possible. Hence, as maintainable as possible.
+
+Additional features features must be done by the 
+developer using mui.
