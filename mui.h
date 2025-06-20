@@ -2,6 +2,7 @@
 #define _MUI_H_
 
 #include <stdio.h>
+#include <stdint.h>
 #include <sys/queue.h>
 
 enum {
@@ -21,9 +22,7 @@ struct mui_element {
     unsigned int type;
     union {
         struct mui_text *text;
-        struct mui_label *label;
-        struct mui_button *button;
-        struct mui_group *group;
+        struct mui_image *image;
     } data;
 
     TAILQ_ENTRY(mui_element) entries;
@@ -81,7 +80,14 @@ struct mui_text {
 
 struct mui_shape { };
 
-struct mui_image { };
+struct mui_image { 
+    void       *ximg;
+    uint32_t    pix;
+    uint32_t    pic;
+    uint16_t    width;
+    uint16_t    height;
+    uint8_t    *data;
+};
 
 
 /*
@@ -139,6 +145,9 @@ void                mui_delete_text(struct mui_text*);
 void                mui_text_add(struct mui_text*, uint8_t*, unsigned int, unsigned int);
 
 
+struct mui_image   *mui_create_image(uint8_t*, uint16_t, uint16_t);
+
+
 
 int               mui_event_pending(struct mui_win*);
 void              mui_push_event(struct mui_win*, struct mui_ev*);
@@ -177,9 +186,12 @@ struct xorg_info {
     void           *conn;
     uint32_t        win_id;
     uint32_t        pic_id;
+    uint32_t        bg_pix;
+    uint32_t        fg_pic;
+    uint32_t        gc;
 };
 
-struct _xfmt { uint32_t norm, a8, argb32; } extern xfmt;
+struct _xfmt { uint32_t normal, alpha8, argb32; } extern xfmt;
 
 /*
  * Internal function in relation to Xorg
@@ -196,5 +208,9 @@ struct xorg_info        xorg_get_info(struct mui_win*);
 int                     text_init(void);
 void                    text_attach_window(struct mui_text*, struct xorg_info);
 void                    text_draw(struct mui_text*, struct xorg_info);
+
+
+void                    image_attach_window(struct mui_image*, struct xorg_info);
+void                    image_draw(struct mui_image*, struct xorg_info);
 
 #endif

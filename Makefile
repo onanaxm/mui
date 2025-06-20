@@ -3,9 +3,9 @@ LIBDIR=${PREFIX}/lib
 CFLAGS= -O0 -Wall -Werror -Wno-unused-function -fPIC -std=c99
 
 
-SRCS= mui.c xorg.c event.c text.c win.c
+SRCS= xorg.c event.c text.c win.c image.c
 INCS= -I /usr/X11R6/include -I /usr/X11R6/include/freetype2
-LIBS= -L /usr/X11R6/lib -lxcb -lxcb-render -lxcb-render-util
+LIBS= -L /usr/X11R6/lib -lxcb -lxcb-render -lxcb-render-util -lxcb-image
 LIBS+= -lfreetype
 MAN3=mui.3
 
@@ -29,6 +29,7 @@ mui: ${OBJS}
 clean:
 	make clean -C demo/hello_win
 	make clean -C demo/multiline
+	make clean -C demo/image
 	rm -f libmui.so ${OBJS}
 
 .PHONY: all mui

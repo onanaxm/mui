@@ -99,7 +99,7 @@ load_glyphset(int id)
     }
 
     loaded_gs[id]->id = xcb_generate_id(xfont.conn);
-    xcb_render_create_glyph_set(xfont.conn, loaded_gs[id]->id, xfmt.a8);
+    xcb_render_create_glyph_set(xfont.conn, loaded_gs[id]->id, xfmt.alpha8);
 
     FT_Set_Char_Size(face, 0, xfont.size * 64, 90, 90);
 

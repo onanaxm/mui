@@ -11,7 +11,6 @@
 
 
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/queue.h>
@@ -80,7 +79,10 @@ xorg_get_info(struct mui_win *mw)
     struct xorg_info xinfo = {
         .conn       = xorg.conn,
         .win_id     = xw->window,
+        .fg_pic     = xw->fg_picture,
         .pic_id     = xw->bg_picture,
+        .bg_pix     = xw->bg_pixmap,
+        .gc         = xw->gc
     };
 
     return xinfo;
@@ -91,21 +93,90 @@ xorg_get_info(struct mui_win *mw)
  * This function is to fetch the picture formats that will be used between different
  * c source files. The values are stored in the `xfmt` struct that is used globaly
  */
-static void
-init_xrender()
+
+static xcb_render_pictdepth_t*
+find_screen_pictdepth(xcb_render_pictscreen_t *ps)
 {
-    xcb_render_query_version_cookie_t vrequest = xcb_render_query_version_unchecked(xorg.conn, 1, 1);
-    xcb_render_query_version_reply_t *vreply   = xcb_render_query_version_reply(xorg.conn, vrequest, NULL);
+    if (ps == NULL) return NULL;
 
-    xcb_render_query_pict_formats_cookie_t fmt_request = xcb_render_query_pict_formats_unchecked(xorg.conn);
-    xcb_render_query_pict_formats_reply_t *fmt_reply   = xcb_render_query_pict_formats_reply(xorg.conn, fmt_request, NULL);
+    xcb_render_pictdepth_iterator_t iter =
+        xcb_render_pictscreen_depths_iterator(ps);
 
-    xcb_render_pictvisual_t *vfmt = xcb_render_util_find_visual_format(fmt_reply, xorg.screen->root_visual);
-    xcb_render_pictforminfo_t *a8 = xcb_render_util_find_standard_format(fmt_reply, XCB_PICT_STANDARD_A_8);
-    xcb_render_pictforminfo_t *argb32 = xcb_render_util_find_standard_format(fmt_reply, XCB_PICT_STANDARD_ARGB_32);
+    for (int i = 0; i < ps->num_depths; i++) {
+        xcb_render_pictdepth_t *pd = iter.data;
+        if (pd->depth == xorg.screen->root_depth)
+            return pd;
+        xcb_render_pictdepth_next(&iter);
+    }
+    return NULL;
+}
 
-    xfmt.norm = vfmt->format;
-    xfmt.a8 = a8->id;
+static xcb_render_pictvisual_t*
+find_screen_pictvisual(xcb_render_pictdepth_t *pd)
+{
+    if (pd == NULL) return NULL;
+
+    xcb_render_pictvisual_iterator_t iter =
+        xcb_render_pictdepth_visuals_iterator(pd);
+
+    for (int i = 0; i < pd->num_visuals; i++) {
+        xcb_render_pictvisual_t *pv = iter.data;
+
+        if (pv->visual == xorg.screen->root_visual)
+            return pv;
+
+        xcb_render_pictvisual_next(&iter);
+    }
+
+    return NULL;
+}
+
+static xcb_render_pictformat_t
+find_screen_format(xcb_render_query_pict_formats_reply_t *reply)
+{
+    xcb_render_pictscreen_iterator_t iter =
+        xcb_render_query_pict_formats_screens_iterator(reply);
+
+    for (int n = 0; n < reply->num_screens; n++) {
+
+        xcb_render_pictscreen_t *ps = iter.data;
+
+        xcb_render_pictdepth_t  *pd = find_screen_pictdepth(ps);
+        xcb_render_pictvisual_t *pv = find_screen_pictvisual(pd);
+
+        /* window format found */
+        if (pv != NULL) return pv->format;
+
+        xcb_render_pictscreen_next(&iter);
+    }
+
+    return 0;
+}
+
+
+static void
+load_xrender_formats()
+{
+    xcb_render_query_version_cookie_t vrequest = 
+        xcb_render_query_version_unchecked(xorg.conn, 1, 1);
+
+    xcb_render_query_version_reply_t *vreply = 
+        xcb_render_query_version_reply(xorg.conn, vrequest, NULL);
+
+    xcb_render_query_pict_formats_cookie_t fmt_request = 
+        xcb_render_query_pict_formats_unchecked(xorg.conn);
+
+    xcb_render_query_pict_formats_reply_t *fmt_reply = 
+        xcb_render_query_pict_formats_reply(xorg.conn, fmt_request, NULL);
+
+    xcb_render_pictforminfo_t *alpha8 = 
+        xcb_render_util_find_standard_format(fmt_reply, XCB_PICT_STANDARD_A_8);
+
+    xcb_render_pictforminfo_t *argb32 = 
+        xcb_render_util_find_standard_format(fmt_reply, XCB_PICT_STANDARD_ARGB_32);
+
+    xfmt.normal = find_screen_format(fmt_reply);
+    xfmt.alpha8 = alpha8->id;
     xfmt.argb32 = argb32->id;
 
     free(vreply);
@@ -165,7 +236,7 @@ xorg_attach_internal(struct mui_win *mw)
         xcb_screen_iterator_t   iter = xcb_setup_roots_iterator(setup);
         xorg.screen = iter.data;
 
-        init_xrender();
+        load_xrender_formats();
         text_init();
         LIST_INIT(&xwhead);
     }
@@ -228,7 +299,7 @@ xorg_attach_internal(struct mui_win *mw)
     xcb_render_create_picture(xorg.conn,
                               xw->bg_picture,
                               xw->bg_pixmap,
-                              xfmt.norm,
+                              xfmt.normal,
                               0,
                               NULL
     );
@@ -333,7 +404,7 @@ render_window(struct xwin *xw)
 
 
     xcb_render_composite(xorg.conn,
-                         XCB_RENDER_PICT_OP_OVER,
+                         XCB_RENDER_PICT_OP_SRC,
                          xw->fg_picture,
                          0,
                          xw->bg_picture,
@@ -355,6 +426,12 @@ render_window(struct xwin *xw)
             case MUI_ELEMENT_TEXT: {
                 struct mui_text *mtext = e->data.text;
                 text_draw(mtext, xi);
+                break;
+            }
+
+            case MUI_ELEMENT_IMAGE: {
+                struct mui_image *mimg = e->data.image;
+                image_draw(mimg, xi);
                 break;
             }
         }
@@ -404,7 +481,7 @@ resize_window(struct xwin *xw)
     xcb_render_create_picture(xorg.conn,
                               xw->bg_picture,
                               xw->bg_pixmap,
-                              xfmt.norm,
+                              xfmt.normal,
                               0,
                               NULL
     );

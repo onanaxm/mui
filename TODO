@@ -2,11 +2,13 @@
 -- mui
 -------------------
 
- - Define `mui_image` struct
+ - Notes for function usage in `mui.h`
+
+ - Support for RGB and A8
+
+ - Remove xcb_render_util dependency
 
  - Add text wrapping
-
- - Create `demo` directory
 
  - Implement `TEXT_MAX_SIZE` in `add_text` in file `text.c`
 
@@ -14,10 +16,12 @@
 
  - Cleanup functions
 
+ - Test NetBSD and FreeBSD support
 
 -------------------
 -- Makefile
 -------------------
+ - Use `pkg-config`
  
  - Library install rule
 

@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #include "mui.h"
 
 
@@ -26,6 +28,7 @@ int main(void)
     while (running) {
         handle_events(mw);
         mui_update();
+        usleep(10000);
     }
 
     mui_delete_window(mw);

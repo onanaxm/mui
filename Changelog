@@ -1,3 +1,12 @@
+@date
+
+ - Remove `mui.c` to append to `win.c`
+ - Added `image.c` for image rendering
+ - demo/image example
+ - Remove some of render-util functions
+ - Some code cleanup
+
+
 2025/06/16:
 
  - added demo `hello_win`

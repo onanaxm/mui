@@ -24,7 +24,7 @@ handle_events(struct mui_win *mw)
 
 
 
-char msg[] = 
+uint8_t msg[] = 
 "Hello,\n\n"
 "This is the mui multiline program\n"
 "Created by yours truly\n\n"
