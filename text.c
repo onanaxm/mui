@@ -229,6 +229,11 @@ text_attach_window(struct mui_text *mt, struct xorg_info xi)
     DEBUG_PRINT(DBUG_MSG, "text attached to window");
 }
 
+void
+text_detach_window(struct mui_text *mt)
+{
+
+}
 
 void
 text_draw(struct mui_text *mt, struct xorg_info xi)

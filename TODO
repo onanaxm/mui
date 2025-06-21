@@ -2,6 +2,10 @@
 -- mui
 -------------------
 
+ - Group rules/styles
+
+ - Replace xcb-image with xcb-shm
+
  - Notes for function usage in `mui.h`
 
  - Support for RGB and A8

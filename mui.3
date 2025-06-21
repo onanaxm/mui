@@ -6,10 +6,31 @@
 .Nd minimalist UI
 .Sh DESCRIPTION
 .Sy mui 
-is a minimalist UI library for X11 that utilizes xcb.
-.Sh BASICS
-Before doing anything, the library must first be included then a window
-can be created.
+is a minimalist UI library for X11 that utilizes xcb. The goal of this
+library is to give the ability to create a very basic GUI while giving
+the ability to the developer to extend upon it. To do so, it utilizes
+the key types listed below.
+.sp
+.Sh WINDOW
+Base of all elements that updates its members when updateded. There
+are two types: normal and popup.
+.Sh ELEMENT
+Instance that must be added to another instance or a window to be
+updated. There are three types: text, images and groups.
+.Sh GROUPS
+Mui elements that contains other mui elements with a set of rules those
+elements are subjected to.
+.sp
+.Sh EXTENSIONS
+Plans are to add extension support to keep the codebase as minimal as
+possible while leaving the ability to developers to add features.
+It is recommended to write extension functions and types as : mui_ext_XX_YY.
+Where XX is the name of the extension and YY the type or method. Hence we
+could have : mui_ext_egl_update.
+.sp
+Functions would be available to help create those extensions but those
+are in the future.
+.sp
 .Sh AUTHORS
 Onana Onana Xavier Manuel 
 .Em onanaxm@outlook.com

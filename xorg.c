@@ -67,7 +67,7 @@ void *xorg_get_connection() { return xorg.conn; }
 uint32_t 
 xorg_get_window(struct mui_win *mw)
 {
-    struct xwin *xw = (struct xwin*)mw->internal.data;
+    struct xwin *xw = (struct xwin*)mw->xorg_win;
     return xw->window;
 }
 
@@ -75,7 +75,7 @@ xorg_get_window(struct mui_win *mw)
 struct xorg_info
 xorg_get_info(struct mui_win *mw)
 {
-    struct xwin *xw = (struct xwin*)mw->internal.data;
+    struct xwin *xw = (struct xwin*)mw->xorg_win;
     struct xorg_info xinfo = {
         .conn       = xorg.conn,
         .win_id     = xw->window,
@@ -356,13 +356,13 @@ xorg_attach_internal(struct mui_win *mw)
     );
 
 
-    mw->internal.data = xw;
+    mw->xorg_win = xw;
     xw->mw = mw;
 
     xcb_map_window(xorg.conn, xw->window);
-    render_window(xw);
 
     LIST_INSERT_HEAD(&xwhead, xw, entries);
+    xcb_flush(xorg.conn);
     return xw;
 }
 
@@ -371,7 +371,7 @@ xorg_attach_internal(struct mui_win *mw)
 void
 xorg_detach_internal(struct mui_win *mw)
 {
-    struct xwin *xw = (struct xwin*)mw->internal.data;
+    struct xwin *xw = (struct xwin*)mw->xorg_win;
     LIST_REMOVE(xw, entries);
 
     xcb_free_pixmap(xorg.conn, xw->bg_pixmap);
@@ -386,7 +386,7 @@ void
 render_window(struct xwin *xw)
 {
     struct mui_win *mw = xw->mw;
-    struct xorg_info xi = xorg_get_info(mw);
+    //struct xorg_info xi = xorg_get_info(mw);
 
     xcb_render_fill_rectangles(xorg.conn,
                                XCB_RENDER_PICT_OP_SRC,
@@ -417,8 +417,6 @@ render_window(struct xwin *xw)
 
 
     /*
-     * Render window content
-     */
     TAILQ_FOREACH(mw->elm_np, &mw->elm_head, entries) {
         struct mui_element *e = mw->elm_np;
 
@@ -436,6 +434,8 @@ render_window(struct xwin *xw)
             }
         }
     }
+    */
+    group_update(mw->group);
 
     xcb_copy_area(xorg.conn,
                   xw->bg_pixmap,

@@ -7,9 +7,7 @@
 
 enum {
     MUI_ELEMENT_TEXT,
-    MUI_ELEMENT_SHAPE,
     MUI_ELEMENT_IMAGE,
-
     MUI_ELEMENT_GROUP
 };
 
@@ -21,8 +19,9 @@ enum {
 struct mui_element {
     unsigned int type;
     union {
-        struct mui_text *text;
+        struct mui_text  *text;
         struct mui_image *image;
+        struct mui_group *group;
     } data;
 
     TAILQ_ENTRY(mui_element) entries;
@@ -78,8 +77,6 @@ struct mui_text {
     TAILQ_HEAD(tts_head, tstream) ts_head;
 };
 
-struct mui_shape { };
-
 struct mui_image { 
     void       *ximg;
     uint32_t    pix;
@@ -87,6 +84,14 @@ struct mui_image {
     uint16_t    width;
     uint16_t    height;
     uint8_t    *data;
+};
+
+
+struct mui_group { 
+    struct mui_win     *mw;
+    struct mui_element *members;
+    struct mui_element *mem_np;
+    TAILQ_HEAD(mem_head, mui_element) mem_head;
 };
 
 
@@ -101,20 +106,8 @@ struct mui_win {
     unsigned int    width;
     unsigned int    height;
 
-    /*
-     * internal types
-     */
-#define INTERNAL_TYPE_UNKNOWN        -1
-#define INTERNAL_TYPE_X11             0
-#define INTERNAL_TYPE_WAYLAND         1
-    struct {
-        int     type;
-        void   *data;
-    } internal;
-
-    struct          mui_element *elmts;
-    struct          mui_element *elm_np;
-    TAILQ_HEAD(elm_head, mui_element) elm_head;
+    void           *xorg_win;
+    struct          mui_group *group;
 
     /* window events */
     struct               mui_ev *evnp;
@@ -123,17 +116,17 @@ struct mui_win {
 };
 
 
-struct mui_win   *mui_create_window(const char*, unsigned int, unsigned int);
-void              mui_delete_window(struct mui_win*);
-void              mui_update(void);
+struct mui_win     *mui_create_window(const char*, unsigned int, unsigned int);
+void                mui_delete_window(struct mui_win*);
+void                mui_update(void);
 
 
 /*
  * This methods adds an element into a container. The container can
  * either be a window or a widget
  */
-void              mui_add(unsigned int, void*, unsigned int, void*);
-void              mui_remove(unsigned int, void*, unsigned int, void*);
+void                mui_add(unsigned int, void*, unsigned int, void*);
+void                mui_remove(unsigned int, void*, unsigned int, void*);
 
 
 void                mui_win_add(struct mui_win*, unsigned int, void*);
@@ -148,10 +141,14 @@ void                mui_text_add(struct mui_text*, uint8_t*, unsigned int, unsig
 struct mui_image   *mui_create_image(uint8_t*, uint16_t, uint16_t);
 
 
+struct mui_group   *mui_create_group(void);
+void                mui_group_add(struct mui_group*, unsigned int, void*);
 
-int               mui_event_pending(struct mui_win*);
-void              mui_push_event(struct mui_win*, struct mui_ev*);
-struct mui_ev     mui_pop_event(struct mui_win*);
+
+
+int                 mui_event_pending(struct mui_win*);
+void                mui_push_event(struct mui_win*, struct mui_ev*);
+struct mui_ev       mui_pop_event(struct mui_win*);
 
 
 
@@ -167,6 +164,7 @@ struct mui_ev     mui_pop_event(struct mui_win*);
 #define DBUG_RED    "\x1B[31m"
 #define DBUG_GRN    "\x1B[32m"
 #define DBUG_YLW    "\x1B[33m"
+
 
 #ifdef MUI_DEBUG
 #define DEBUG_PRINT(prefix, fmt, ...) \
@@ -193,9 +191,7 @@ struct xorg_info {
 
 struct _xfmt { uint32_t normal, alpha8, argb32; } extern xfmt;
 
-/*
- * Internal function in relation to Xorg
- */
+
 void                   *xorg_attach_internal(struct mui_win*);
 void                    xorg_detach_internal(struct mui_win*);
 void                    xorg_handle_events(void);
@@ -207,10 +203,15 @@ struct xorg_info        xorg_get_info(struct mui_win*);
 
 int                     text_init(void);
 void                    text_attach_window(struct mui_text*, struct xorg_info);
+void                    text_detach_window(struct mui_text*);
 void                    text_draw(struct mui_text*, struct xorg_info);
 
 
 void                    image_attach_window(struct mui_image*, struct xorg_info);
 void                    image_draw(struct mui_image*, struct xorg_info);
+
+void                    group_update(struct mui_group*);
+void                    group_attach_window(struct mui_group*, struct mui_win*);
+
 
 #endif
